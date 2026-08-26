@@ -10,7 +10,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: free
-    healthCheckPath: /api/v1/habits
+    healthCheckPath: /v3/api-docs
     envVars:
       - key: DB_HOST
         fromDatabase:
