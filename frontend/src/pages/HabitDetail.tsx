@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
-import { completeHabit, deleteHabit, getHabit, getHistory } from '../api/habits'
-import CompletionCalendar from '../components/CompletionCalendar'
-import TreeBadge from '../components/TreeBadge'
-import type { Habit, HabitCompletion } from '../types'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { getHabit, getHistory, getAnalytics, completeHabit, undoCompletion, archiveHabit } from '../api/habits'
+import ContributionCalendar from '../components/ContributionCalendar'
+import type { AnalyticsResponse, Habit, HabitCompletion } from '../types'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import './HabitDetail.css'
+
+const MILESTONES = [7, 14, 30, 60, 90]
+const TREE_EMOJI: Record<string, string> = {
+  SEED: '🌱', HERB: '🌿', SHRUB: '🪴', SAPLING: '🌳',
+  YOUNG_TREE: '🌲', TREE: '🌳', FLOWERING_TREE: '🌸', FRUIT_TREE: '🍎', MATURE_TREE: '🏔️',
+}
+const TREE_STATE_LABEL: Record<string, string> = { ALIVE: 'Alive', DEAD: 'Dead' }
 
 export default function HabitDetail() {
   const { id } = useParams<{ id: string }>()
@@ -13,80 +20,99 @@ export default function HabitDetail() {
 
   const [habit, setHabit] = useState<Habit | null>(null)
   const [history, setHistory] = useState<HabitCompletion[]>([])
+  const [analytics, setAnalytics] = useState<AnalyticsResponse | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [completing, setCompleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const today = new Date().toISOString().split('T')[0]
 
-  useEffect(() => {
-    Promise.all([getHabit(habitId), getHistory(habitId)])
-      .then(([h, hist]) => {
-        setHabit(h)
-        setHistory(hist)
-      })
-      .catch(() => setError('Could not load habit.'))
-      .finally(() => setLoading(false))
-  }, [habitId])
+  async function load() {
+    try {
+      const [h, hist, an] = await Promise.all([
+        getHabit(habitId),
+        getHistory(habitId),
+        getAnalytics(habitId).catch(() => null),
+      ])
+      setHabit(h)
+      setHistory(hist)
+      setAnalytics(an)
+    } catch {
+      setError('Could not load habit.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { load() }, [habitId])
 
   async function handleComplete() {
-    if (!habit) return
     setCompleting(true)
     try {
       await completeHabit(habitId, today)
-      const [updated, hist] = await Promise.all([getHabit(habitId), getHistory(habitId)])
-      setHabit(updated)
-      setHistory(hist)
-    } catch (err: unknown) {
-      const msg =
-        err && typeof err === 'object' && 'response' in err
-          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message ??
-            'Already completed today'
-          : 'Already completed today'
-      setError(msg)
+      await load()
+    } catch {
+      setError('Failed to mark complete.')
     } finally {
       setCompleting(false)
     }
   }
 
-  async function handleDelete() {
-    if (!window.confirm('Delete this habit? Historical completions will also be removed.')) return
-    await deleteHabit(habitId)
+  async function handleUndo() {
+    setCompleting(true)
+    try {
+      await undoCompletion(habitId, today)
+      await load()
+    } catch {
+      setError('Could not undo completion.')
+    } finally {
+      setCompleting(false)
+    }
+  }
+
+  async function handleArchive() {
+    if (!confirm(`Archive "${habit?.name}"?`)) return
+    await archiveHabit(habitId)
     navigate('/')
   }
 
   if (loading) return <p className="state-msg">Loading…</p>
-  if (error && !habit) return <p className="state-msg state-msg--error">{error}</p>
-  if (!habit) return null
+  if (!habit) return <p className="state-msg state-msg--error">{error ?? 'Habit not found.'}</p>
+
+  const completionRate = analytics ? Math.round(analytics.completionRate * 100) : null
+  const nextMilestone = MILESTONES.find((m) => m > habit.currentStreak)
 
   return (
-    <div className="habit-detail">
-      <header className="habit-detail__header">
+    <div className="detail-page">
+      <header className="detail-header">
         <Link to="/" className="back-link">← Back</Link>
-        <h1>{habit.name}</h1>
-        <TreeBadge stage={habit.treeStage} state={habit.treeState} size="lg" />
+        <div className="detail-header__actions">
+          <Link to={`/habits/${habitId}/edit`} className="btn btn--ghost btn--sm">Edit</Link>
+          <button className="btn btn--ghost btn--sm btn--danger" onClick={handleArchive}>Archive</button>
+        </div>
       </header>
 
-      <div className="stat-row">
-        <div className="stat">
-          <span className="stat__value">🔥 {habit.currentStreak}</span>
-          <span className="stat__label">Current streak</span>
-        </div>
-        <div className="stat">
-          <span className="stat__value">🏆 {habit.longestStreak}</span>
-          <span className="stat__label">Longest streak</span>
-        </div>
-        <div className="stat">
-          <span className="stat__value">{history.length}</span>
-          <span className="stat__label">Total completions</span>
+      <div className="detail-hero">
+        <span className="detail-tree-emoji">{TREE_EMOJI[habit.treeStage] ?? '🌱'}</span>
+        <div>
+          <h1 className="detail-name">{habit.name}</h1>
+          {habit.description && <p className="detail-desc">{habit.description}</p>}
+          <div className="detail-badges">
+            {habit.category && <span className="badge badge--cat">{habit.category}</span>}
+            <span className={`badge badge--state ${habit.treeState === 'DEAD' ? 'badge--dead' : 'badge--alive'}`}>
+              {TREE_STATE_LABEL[habit.treeState] ?? habit.treeState}
+            </span>
+          </div>
         </div>
       </div>
 
-      {error && <p className="state-msg state-msg--error">{error}</p>}
-
-      <div className="habit-detail__complete">
+      {/* Completion action */}
+      <div className="detail-action">
         {habit.todayCompleted ? (
-          <p className="done-today">✅ Completed today</p>
+          <div className="detail-action__done">
+            <span>✅ Completed today</span>
+            <button className="btn-link" onClick={handleUndo} disabled={completing}>Undo</button>
+          </div>
         ) : (
           <button className="btn btn--primary" onClick={handleComplete} disabled={completing}>
             {completing ? 'Saving…' : 'Complete today'}
@@ -94,29 +120,71 @@ export default function HabitDetail() {
         )}
       </div>
 
-      <section className="habit-detail__section">
-        <h2>Last 6 weeks</h2>
-        <CompletionCalendar completions={history} />
-      </section>
-
-      <section className="habit-detail__section">
-        <h2>History</h2>
-        {history.length === 0 ? (
-          <p className="state-msg">No completions yet.</p>
-        ) : (
-          <ul className="history-list">
-            {history.slice(0, 30).map((c) => (
-              <li key={c.id} className="history-list__item">
-                {c.completionDate}
-              </li>
-            ))}
-          </ul>
+      {/* Stats grid */}
+      <div className="stats-grid">
+        <div className="stat-card">
+          <span className="stat-value">🔥 {habit.currentStreak}</span>
+          <span className="stat-label">Current streak</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-value">⭐ {habit.longestStreak}</span>
+          <span className="stat-label">Longest streak</span>
+        </div>
+        {analytics && (
+          <div className="stat-card">
+            <span className="stat-value">{analytics.totalCompletions}</span>
+            <span className="stat-label">Total completions</span>
+          </div>
         )}
+        {completionRate !== null && (
+          <div className="stat-card">
+            <span className="stat-value">{completionRate}%</span>
+            <span className="stat-label">Completion rate</span>
+          </div>
+        )}
+      </div>
+
+      {/* Next milestone */}
+      {nextMilestone && (
+        <div className="milestone-bar">
+          <span>🎯 {nextMilestone - habit.currentStreak} days to {nextMilestone}-day badge</span>
+          <div className="milestone-bar__track">
+            <div className="milestone-bar__fill" style={{ width: `${(habit.currentStreak / nextMilestone) * 100}%` }} />
+          </div>
+        </div>
+      )}
+
+      {/* Milestone badges */}
+      <div className="milestone-badges">
+        {MILESTONES.map((m) => (
+          <div key={m} className={`milestone-badge ${habit.longestStreak >= m ? 'milestone-badge--earned' : ''}`} title={`${m}-day streak`}>
+            🏅 {m}d
+          </div>
+        ))}
+      </div>
+
+      {/* Contribution calendar */}
+      <section className="detail-section">
+        <h3 className="detail-section__title">Contribution history</h3>
+        <ContributionCalendar completions={history} />
       </section>
 
-      <section className="habit-detail__danger">
-        <button className="btn btn--danger" onClick={handleDelete}>Delete habit</button>
-      </section>
+      {/* Weekly chart */}
+      {analytics && analytics.weeklyStats && analytics.weeklyStats.length > 0 && (
+        <section className="detail-section">
+          <h3 className="detail-section__title">Weekly completions</h3>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={analytics.weeklyStats.slice(-16)} margin={{ top: 4, right: 0, left: -24, bottom: 0 }}>
+              <XAxis dataKey="weekLabel" tick={{ fontSize: 10 }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
+              <Tooltip />
+              <Bar dataKey="completions" fill="#16a34a" radius={[3, 3, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </section>
+      )}
+
+      {error && <p className="form-error">{error}</p>}
     </div>
   )
 }

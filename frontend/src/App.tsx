@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import CreateHabit from './pages/CreateHabit'
 import Dashboard from './pages/Dashboard'
+import EditHabit from './pages/EditHabit'
 import HabitDetail from './pages/HabitDetail'
 
 // Strip trailing slash from VITE_BASE_PATH to get the React Router basename.
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/habits/new" element={<CreateHabit />} />
         <Route path="/habits/:id" element={<HabitDetail />} />
+        <Route path="/habits/:id/edit" element={<EditHabit />} />
       </Routes>
     </BrowserRouter>
   )

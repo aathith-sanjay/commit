@@ -1,14 +1,15 @@
 package com.snow.commit.dto;
 
-import com.snow.commit.entity.TreeState;
+import com.snow.commit.entity.ScheduleType;
 import com.snow.commit.entity.TreeStage;
+import com.snow.commit.entity.TreeState;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record HabitResponse(
     Long id,
     String name,
-    String scheduleType,
+    ScheduleType scheduleType,
     boolean active,
     LocalDate startDate,
     int currentStreak,
@@ -17,6 +18,11 @@ public record HabitResponse(
     TreeStage treeStage,
     boolean todayCompleted,
     LocalDateTime createdAt,
-    LocalDateTime updatedAt
+    LocalDateTime updatedAt,
+    String description,
+    String category,
+    LocalDate endDate,
+    String timezone,
+    String scheduleDays
 ) {
 }

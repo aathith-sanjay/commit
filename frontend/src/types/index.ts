@@ -11,12 +11,22 @@ export type TreeStage =
   | 'FRUIT_TREE'
   | 'MATURE_TREE'
 
+export type ScheduleType = 'DAILY' | 'WEEKLY' | 'SPECIFIC_DAYS'
+
+export const DAYS_OF_WEEK = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'] as const
+export type DayOfWeek = (typeof DAYS_OF_WEEK)[number]
+
 export interface Habit {
   id: number
   name: string
-  scheduleType: string
+  description?: string
+  category?: string
+  scheduleType: ScheduleType
+  scheduleDays?: string
   active: boolean
   startDate: string
+  endDate?: string
+  timezone: string
   currentStreak: number
   longestStreak: number
   treeState: TreeState
@@ -46,12 +56,46 @@ export interface TreeResponse {
   longestStreak: number
 }
 
+export interface WeekStat {
+  weekLabel: string
+  scheduled: number
+  completed: number
+}
+
+export interface MonthStat {
+  monthLabel: string
+  scheduled: number
+  completed: number
+}
+
+export interface AnalyticsResponse {
+  totalCompletions: number
+  completionRate: number
+  currentStreak: number
+  longestStreak: number
+  consistencyScore: number
+  weeklyStats: WeekStat[]
+  monthlyStats: MonthStat[]
+}
+
 export interface CreateHabitPayload {
   name: string
   startDate: string
+  description?: string
+  category?: string
+  scheduleType?: ScheduleType
+  scheduleDays?: string
+  endDate?: string
+  timezone?: string
 }
 
 export interface UpdateHabitPayload {
   name?: string
+  description?: string
+  category?: string
   active?: boolean
+  scheduleType?: ScheduleType
+  scheduleDays?: string
+  endDate?: string
+  timezone?: string
 }

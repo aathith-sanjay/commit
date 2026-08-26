@@ -1,74 +1,92 @@
-.habit-detail {
+.detail-page {
   max-width: 640px;
   margin: 0 auto;
-  padding: 32px 20px;
-}
-.habit-detail__header {
-  margin-bottom: 24px;
-}
-.habit-detail__header h1 {
-  margin: 8px 0 10px;
-  font-size: 1.7rem;
-  font-weight: 700;
-}
-.stat-row {
+  padding: 24px 16px 60px;
   display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 20px;
 }
-.stat {
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.detail-header__actions { display: flex; gap: 8px; }
+.detail-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.detail-tree-emoji { font-size: 3rem; line-height: 1; flex-shrink: 0; }
+.detail-name { font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; color: #111827; }
+.detail-desc { font-size: 0.88rem; color: #6b7280; margin: 0 0 8px; }
+.detail-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.badge {
+  font-size: 0.72rem;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+.badge--cat { background: #f3f4f6; color: #6b7280; }
+.badge--alive { background: #dcfce7; color: #16a34a; }
+.badge--dead { background: #fee2e2; color: #dc2626; }
+
+.detail-action { }
+.detail-action__done { display: flex; align-items: center; gap: 12px; font-size: 0.92rem; color: #16a34a; font-weight: 500; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.stat-card {
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
-  padding: 14px 20px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  min-width: 100px;
-  flex: 1;
+  gap: 4px;
 }
-.stat__value {
-  font-size: 1.4rem;
-  font-weight: 700;
-}
-.stat__label {
-  font-size: 0.78rem;
-  color: #6b7280;
-  margin-top: 4px;
-}
-.habit-detail__complete {
-  margin-bottom: 28px;
-}
-.done-today {
-  color: #16a34a;
-  font-weight: 500;
-  font-size: 1rem;
-}
-.habit-detail__section {
-  margin-bottom: 28px;
-}
-.habit-detail__section h2 {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 12px;
-}
-.history-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.history-list__item {
-  font-size: 0.9rem;
-  color: #374151;
-  padding: 6px 10px;
+.stat-value { font-size: 1.2rem; font-weight: 700; color: #111827; }
+.stat-label { font-size: 0.75rem; color: #9ca3af; }
+
+.milestone-bar { background: #f9fafb; border-radius: 10px; padding: 12px 14px; font-size: 0.85rem; color: #374151; display: flex; flex-direction: column; gap: 8px; }
+.milestone-bar__track { background: #e5e7eb; border-radius: 8px; height: 6px; overflow: hidden; }
+.milestone-bar__fill { height: 100%; background: #16a34a; border-radius: 8px; transition: width 0.4s; }
+
+.milestone-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+.milestone-badge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
   background: #f9fafb;
-  border-radius: 6px;
+  font-size: 0.78rem;
+  color: #9ca3af;
 }
-.habit-detail__danger { padding-top: 12px; border-top: 1px solid #f3f4f6; }
-.state-msg { color: #6b7280; }
+.milestone-badge--earned { border-color: #fbbf24; background: #fffbeb; color: #92400e; }
+
+.detail-section { }
+.detail-section__title { font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; margin: 0 0 10px; }
+
+.btn--ghost {
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: #374151;
+}
+.btn--ghost:hover { border-color: #9ca3af; }
+.btn--danger { color: #dc2626; }
+.btn--danger:hover { border-color: #dc2626; background: #fef2f2; }
+
+.form-error { color: #dc2626; font-size: 0.85rem; margin: 0; }
+.state-msg { color: #6b7280; padding: 32px 16px; }
 .state-msg--error { color: #dc2626; }
+.btn-link { background: none; border: none; color: #6b7280; font-size: 0.82rem; cursor: pointer; text-decoration: underline; padding: 0; }
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}

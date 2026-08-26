@@ -1,27 +1,40 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { createHabit } from '../api/habits'
-import type { DayOfWeek, ScheduleType } from '../types'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { getHabit, updateHabit } from '../api/habits'
+import type { DayOfWeek, Habit, ScheduleType } from '../types'
 import { DAYS_OF_WEEK } from '../types'
 import './HabitForm.css'
 
 const CATEGORIES = ['Health', 'Fitness', 'Learning', 'Mindfulness', 'Productivity', 'Social', 'Other']
 
-export default function CreateHabit() {
+export default function EditHabit() {
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const habitId = Number(id)
+
+  const [habit, setHabit] = useState<Habit | null>(null)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
   const [scheduleType, setScheduleType] = useState<ScheduleType>('DAILY')
   const [scheduleDays, setScheduleDays] = useState<DayOfWeek[]>([])
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    getHabit(habitId).then((h) => {
+      setHabit(h)
+      setName(h.name)
+      setDescription(h.description ?? '')
+      setCategory(h.category ?? '')
+      setScheduleType(h.scheduleType)
+      setScheduleDays(h.scheduleDays ? (h.scheduleDays.split(',') as DayOfWeek[]) : [])
+    }).catch(() => setError('Could not load habit.')).finally(() => setLoading(false))
+  }, [habitId])
+
   function toggleDay(day: DayOfWeek) {
-    setScheduleDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-    )
+    setScheduleDays((prev) => prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day])
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -31,40 +44,42 @@ export default function CreateHabit() {
       setError('Please select at least one day.')
       return
     }
-    setLoading(true)
+    setSaving(true)
     setError(null)
     try {
-      await createHabit({
+      await updateHabit(habitId, {
         name: name.trim(),
         description: description.trim() || undefined,
         category: category || undefined,
         scheduleType,
         scheduleDays: scheduleType === 'SPECIFIC_DAYS' ? scheduleDays.join(',') : undefined,
-        startDate,
       })
-      navigate('/')
+      navigate(`/habits/${habitId}`)
     } catch (err: unknown) {
-      setError(extractMessage(err) ?? 'Failed to create habit')
+      setError(extractMessage(err) ?? 'Failed to save habit')
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
   }
+
+  if (loading) return <p className="state-msg">Loading…</p>
+  if (error && !habit) return <p className="state-msg state-msg--error">{error}</p>
 
   return (
     <div className="habit-form-page">
       <header className="habit-form-page__header">
-        <Link to="/" className="back-link">← Back</Link>
-        <h1>New Habit</h1>
+        <Link to={`/habits/${habitId}`} className="back-link">← Back</Link>
+        <h1>Edit Habit</h1>
       </header>
       <form className="habit-form" onSubmit={handleSubmit}>
         <label className="form-field">
           <span className="form-label">Name <span className="required">*</span></span>
-          <input className="form-input" type="text" maxLength={150} value={name} onChange={(e) => setName(e.target.value)} autoFocus required placeholder="e.g. Read, Run, Journal" />
+          <input className="form-input" type="text" maxLength={150} value={name} onChange={(e) => setName(e.target.value)} autoFocus required />
         </label>
 
         <label className="form-field">
           <span className="form-label">Description</span>
-          <textarea className="form-input form-textarea" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="Optional note about this habit" />
+          <textarea className="form-input form-textarea" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
         </label>
 
         <label className="form-field">
@@ -95,14 +110,9 @@ export default function CreateHabit() {
           )}
         </div>
 
-        <label className="form-field">
-          <span className="form-label">Start date</span>
-          <input className="form-input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
-        </label>
-
         {error && <p className="form-error">{error}</p>}
-        <button type="submit" className="btn btn--primary btn--full" disabled={loading || !name.trim()}>
-          {loading ? 'Creating…' : 'Create habit'}
+        <button type="submit" className="btn btn--primary btn--full" disabled={saving || !name.trim()}>
+          {saving ? 'Saving…' : 'Save changes'}
         </button>
       </form>
     </div>

@@ -12,5 +12,11 @@ public interface HabitCompletionRepository extends JpaRepository<HabitCompletion
 
     List<HabitCompletion> findByHabitIdOrderByCompletionDateDesc(Long habitId);
 
+    List<HabitCompletion> findByHabitIdAndCompletionDateBetweenOrderByCompletionDateAsc(Long habitId, LocalDate from, LocalDate to);
+
+    long countByHabitId(Long habitId);
+
+    Optional<HabitCompletion> findByHabitIdAndCompletionDate(Long habitId, LocalDate date);
+
     Optional<HabitCompletion> findTopByHabitIdOrderByCompletionDateDesc(Long habitId);
 }

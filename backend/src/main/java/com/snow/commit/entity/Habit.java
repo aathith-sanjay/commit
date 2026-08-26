@@ -22,14 +22,30 @@ public class Habit {
     @Column(nullable = false, length = 150)
     private String name;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "schedule_type", nullable = false, length = 50)
-    private String scheduleType = "DAILY";
+    private ScheduleType scheduleType = ScheduleType.DAILY;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(length = 80)
+    private String category;
 
     @Column(nullable = false)
     private boolean active = true;
 
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
+    @Column(nullable = false, length = 60)
+    private String timezone = "Asia/Kolkata";
+
+    @Column(name = "schedule_days", length = 30)
+    private String scheduleDays;
 
     @Column(name = "current_streak", nullable = false)
     private int currentStreak;
@@ -68,12 +84,28 @@ public class Habit {
         this.name = name;
     }
 
-    public String getScheduleType() {
+    public ScheduleType getScheduleType() {
         return scheduleType;
     }
 
-    public void setScheduleType(String scheduleType) {
+    public void setScheduleType(ScheduleType scheduleType) {
         this.scheduleType = scheduleType;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public boolean isActive() {
@@ -90,6 +122,30 @@ public class Habit {
 
     public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
+    public String getTimezone() {
+        return timezone;
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
+    }
+
+    public String getScheduleDays() {
+        return scheduleDays;
+    }
+
+    public void setScheduleDays(String scheduleDays) {
+        this.scheduleDays = scheduleDays;
     }
 
     public int getCurrentStreak() {

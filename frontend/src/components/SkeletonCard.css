@@ -1,0 +1,22 @@
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.skeleton {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s infinite;
+}
+.skeleton--title { height: 18px; width: 55%; }
+.skeleton--text  { height: 14px; width: 35%; }
+.skeleton--btn   { height: 32px; width: 100px; }

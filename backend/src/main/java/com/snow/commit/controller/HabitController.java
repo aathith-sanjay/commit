@@ -1,5 +1,6 @@
 package com.snow.commit.controller;
 
+import com.snow.commit.dto.AnalyticsResponse;
 import com.snow.commit.dto.CompletionRequest;
 import com.snow.commit.dto.CreateHabitRequest;
 import com.snow.commit.dto.HabitCompletionResponse;
@@ -14,11 +15,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -32,8 +35,8 @@ public class HabitController {
     }
 
     @GetMapping("/habits")
-    public List<HabitResponse> getHabits() {
-        return habitService.getHabits();
+    public List<HabitResponse> getHabits(@RequestParam(defaultValue = "false") boolean includeArchived) {
+        return habitService.getHabits(includeArchived);
     }
 
     @PostMapping("/habits")
@@ -50,6 +53,16 @@ public class HabitController {
     @PutMapping("/habits/{id}")
     public HabitResponse updateHabit(@PathVariable Long id, @Valid @RequestBody UpdateHabitRequest request) {
         return habitService.updateHabit(id, request);
+    }
+
+    @PatchMapping("/habits/{id}/archive")
+    public HabitResponse archiveHabit(@PathVariable Long id) {
+        return habitService.archiveHabit(id);
+    }
+
+    @PatchMapping("/habits/{id}/restore")
+    public HabitResponse restoreHabit(@PathVariable Long id) {
+        return habitService.restoreHabit(id);
     }
 
     @DeleteMapping("/habits/{id}")
@@ -76,5 +89,10 @@ public class HabitController {
     @GetMapping("/habits/{id}/tree")
     public TreeResponse getTree(@PathVariable Long id) {
         return habitService.getTree(id);
+    }
+
+    @GetMapping("/habits/{id}/analytics")
+    public AnalyticsResponse getAnalytics(@PathVariable Long id) {
+        return habitService.getAnalytics(id);
     }
 }
