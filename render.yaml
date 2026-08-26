@@ -1,0 +1,36 @@
+databases:
+  - name: commit-db
+    databaseName: commit
+    user: commit
+    plan: free
+
+services:
+  - type: web
+    name: commit-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /api/v1/habits
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: commit-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: commit-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: commit-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: commit-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: commit-db
+          property: password
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://aathith-sanjay.github.io

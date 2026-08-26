@@ -1,0 +1,49 @@
+.create-habit {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+.create-habit__header {
+  margin-bottom: 28px;
+}
+.create-habit__header h1 {
+  margin: 8px 0 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+.back-link {
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.back-link:hover { color: #111827; }
+.create-habit__form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+}
+.form-input {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-input:focus { border-color: #16a34a; }
+.form-error {
+  color: #dc2626;
+  font-size: 0.88rem;
+  margin: 0;
+}
+.btn--full { width: 100%; }

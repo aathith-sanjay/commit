@@ -1,0 +1,55 @@
+.dashboard {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+.dashboard__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.dashboard__title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: #111827;
+}
+.dashboard__subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 4px 0 0;
+}
+.dashboard__progress {
+  position: relative;
+  background: #e5e7eb;
+  border-radius: 8px;
+  height: 8px;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+.dashboard__progress-bar {
+  height: 100%;
+  background: #16a34a;
+  border-radius: 8px;
+  transition: width 0.4s ease;
+}
+.dashboard__progress-label {
+  position: absolute;
+  right: 0;
+  top: 12px;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+.dashboard__empty {
+  text-align: center;
+  padding: 48px 0;
+  color: #6b7280;
+}
+.habit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.state-msg { color: #6b7280; }
+.state-msg--error { color: #dc2626; }

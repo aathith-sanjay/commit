@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: commit-db
+    environment:
+      POSTGRES_DB: commit
+      POSTGRES_USER: commit
+      POSTGRES_PASSWORD: commit
+    ports:
+      - "5434:5432"
+    volumes:
+      - commit_db_data:/var/lib/postgresql/data
+
+volumes:
+  commit_db_data:
