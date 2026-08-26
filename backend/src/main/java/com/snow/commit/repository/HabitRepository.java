@@ -6,5 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface HabitRepository extends JpaRepository<Habit, Long> {
 
-    List<Habit> findByActive(boolean active);
+    List<Habit> findByUserId(Long userId);
+
+    List<Habit> findByActiveAndUserId(boolean active, Long userId);
 }

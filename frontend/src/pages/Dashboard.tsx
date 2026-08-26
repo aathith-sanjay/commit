@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { getHabits } from '../api/habits'
 import HabitCard from '../components/HabitCard'
 import SkeletonCard from '../components/SkeletonCard'
+import { useAuth } from '../context/AuthContext'
 import type { Habit } from '../types'
 import './Dashboard.css'
 
@@ -23,6 +24,7 @@ function isScheduledToday(habit: Habit): boolean {
 }
 
 export default function Dashboard() {
+  const { user } = useAuth()
   const [habits, setHabits] = useState<Habit[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -66,7 +68,12 @@ export default function Dashboard() {
           <h1 className="dashboard__title">commit.</h1>
           <p className="dashboard__subtitle">{today}</p>
         </div>
-        <Link to="/habits/new" className="btn btn--primary">+ New</Link>
+        <div className="dashboard__header-actions">
+          <Link to="/habits/new" className="btn btn--primary">+ New</Link>
+          <Link to="/account" className="dashboard__avatar" title={user?.displayName ?? 'Account'}>
+            {(user?.displayName ?? '?').charAt(0).toUpperCase()}
+          </Link>
+        </div>
       </header>
 
       {!loading && habits.length > 0 && (

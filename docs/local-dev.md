@@ -124,3 +124,35 @@ JAVA_HOME=/usr/lib/jvm/jdk-17.0.12-oracle-x64 ../mvnw test
 
 None of these collide with AppSense's local services (9094, 9093, 8443, 9000–9002, 9281, 3128, 63397, 63315).
 
+
+---
+
+## V3 Authentication
+
+V3 adds JWT-based authentication. New environment variables required:
+
+| Variable | Description | Required in production |
+|---|---|---|
+| `JWT_SECRET` | HMAC-SHA256 signing key (min 32 chars) | **Yes** |
+| `JWT_EXPIRATION_DAYS` | Token validity in days (default: 30) | No |
+
+### Generate a secure JWT secret
+```bash
+openssl rand -base64 48
+```
+
+### Local dev default
+The backend will use a built-in development secret if `JWT_SECRET` is not set.
+**Do not use the default in production.**
+
+### Migration user
+The V3 Flyway migration creates a migration user `admin@commit.local` with password `changeme`
+and assigns all existing habits to it. After deploying V3, register a proper account and
+re-create your habits, or update the migration user's email/password via the database.
+
+### Auth endpoints
+| Method | URL | Description |
+|---|---|---|
+| `POST` | `/api/v1/auth/register` | Register new account |
+| `POST` | `/api/v1/auth/login` | Login, receive JWT |
+| `GET` | `/api/v1/auth/me` | Get current user info |

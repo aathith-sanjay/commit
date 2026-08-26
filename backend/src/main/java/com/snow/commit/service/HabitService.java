@@ -8,13 +8,16 @@ import com.snow.commit.dto.HabitResponse;
 import com.snow.commit.dto.StreakResponse;
 import com.snow.commit.dto.TreeResponse;
 import com.snow.commit.dto.UpdateHabitRequest;
+import com.snow.commit.entity.AppUser;
 import com.snow.commit.entity.Habit;
 import com.snow.commit.entity.HabitCompletion;
 import com.snow.commit.entity.ScheduleType;
 import com.snow.commit.entity.TreeStage;
 import com.snow.commit.entity.TreeState;
 import com.snow.commit.exception.DuplicateCompletionException;
+import com.snow.commit.exception.HabitNotFoundException;
 import com.snow.commit.exception.ResourceNotFoundException;
+import com.snow.commit.repository.AppUserRepository;
 import com.snow.commit.repository.HabitCompletionRepository;
 import com.snow.commit.repository.HabitRepository;
 import jakarta.transaction.Transactional;
@@ -40,17 +43,26 @@ public class HabitService {
 
     private final HabitRepository habitRepository;
     private final HabitCompletionRepository completionRepository;
+    private final AppUserRepository userRepository;
 
-    public HabitService(HabitRepository habitRepository, HabitCompletionRepository completionRepository) {
+    public HabitService(
+        HabitRepository habitRepository,
+        HabitCompletionRepository completionRepository,
+        AppUserRepository userRepository
+    ) {
         this.habitRepository = habitRepository;
         this.completionRepository = completionRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
-    public HabitResponse createHabit(CreateHabitRequest request) {
+    public HabitResponse createHabit(CreateHabitRequest request, Long userId) {
         if (request.name() == null || request.name().isBlank()) {
             throw new IllegalArgumentException("Habit name is required");
         }
+
+        AppUser user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + userId));
 
         Habit habit = new Habit();
         habit.setName(request.name().trim());
@@ -62,6 +74,7 @@ public class HabitService {
         habit.setTimezone(normalizeTimezone(request.timezone()));
         habit.setScheduleType(resolveScheduleType(request.scheduleType()));
         habit.setScheduleDays(normalizeScheduleDays(habit.getScheduleType(), request.scheduleDays()));
+        habit.setUser(user);
         validateDateRange(habit.getStartDate(), habit.getEndDate());
         habit.setCurrentStreak(0);
         habit.setLongestStreak(0);
@@ -73,23 +86,21 @@ public class HabitService {
         return toResponse(savedHabit);
     }
 
-    public List<HabitResponse> getHabits() {
-        return getHabits(false);
-    }
-
-    public List<HabitResponse> getHabits(boolean includeArchived) {
-        List<Habit> habits = includeArchived ? habitRepository.findAll() : habitRepository.findByActive(true);
+    public List<HabitResponse> getHabits(boolean includeArchived, Long userId) {
+        List<Habit> habits = includeArchived
+            ? habitRepository.findByUserId(userId)
+            : habitRepository.findByActiveAndUserId(true, userId);
         return habits.stream().map(this::toResponse).toList();
     }
 
-    public HabitResponse getHabit(Long id) {
-        Habit habit = getHabitEntity(id);
+    public HabitResponse getHabit(Long id, Long userId) {
+        Habit habit = getHabitEntity(id, userId);
         return toResponse(habit);
     }
 
     @Transactional
-    public HabitResponse updateHabit(Long id, UpdateHabitRequest request) {
-        Habit habit = getHabitEntity(id);
+    public HabitResponse updateHabit(Long id, UpdateHabitRequest request, Long userId) {
+        Habit habit = getHabitEntity(id, userId);
 
         if (request.name() != null && !request.name().isBlank()) {
             habit.setName(request.name().trim());
@@ -127,8 +138,8 @@ public class HabitService {
     }
 
     @Transactional
-    public HabitResponse archiveHabit(Long id) {
-        Habit habit = getHabitEntity(id);
+    public HabitResponse archiveHabit(Long id, Long userId) {
+        Habit habit = getHabitEntity(id, userId);
         habit.setActive(false);
         habit.setUpdatedAt(LocalDateTime.now());
         Habit saved = habitRepository.save(habit);
@@ -136,8 +147,8 @@ public class HabitService {
     }
 
     @Transactional
-    public HabitResponse restoreHabit(Long id) {
-        Habit habit = getHabitEntity(id);
+    public HabitResponse restoreHabit(Long id, Long userId) {
+        Habit habit = getHabitEntity(id, userId);
         habit.setActive(true);
         habit.setUpdatedAt(LocalDateTime.now());
         Habit saved = habitRepository.save(habit);
@@ -145,14 +156,14 @@ public class HabitService {
     }
 
     @Transactional
-    public void deleteHabit(Long id) {
-        Habit habit = getHabitEntity(id);
+    public void deleteHabit(Long id, Long userId) {
+        Habit habit = getHabitEntity(id, userId);
         habitRepository.delete(habit);
     }
 
     @Transactional
-    public HabitCompletionResponse completeHabit(Long id, CompletionRequest request) {
-        Habit habit = getHabitEntity(id);
+    public HabitCompletionResponse completeHabit(Long id, CompletionRequest request, Long userId) {
+        Habit habit = getHabitEntity(id, userId);
         LocalDate completionDate = request.completionDate();
 
         if (completionRepository.existsByHabitIdAndCompletionDate(id, completionDate)) {
@@ -168,27 +179,27 @@ public class HabitService {
         return new HabitCompletionResponse(savedCompletion.getId(), habit.getId(), savedCompletion.getCompletionDate(), savedCompletion.getCreatedAt());
     }
 
-    public List<HabitCompletionResponse> getHistory(Long id) {
-        getHabitEntity(id);
+    public List<HabitCompletionResponse> getHistory(Long id, Long userId) {
+        getHabitEntity(id, userId);
         return completionRepository.findByHabitIdOrderByCompletionDateDesc(id).stream()
             .map(c -> new HabitCompletionResponse(c.getId(), c.getHabit().getId(), c.getCompletionDate(), c.getCreatedAt()))
             .toList();
     }
 
-    public StreakResponse getStreak(Long id) {
-        Habit habit = getHabitEntity(id);
+    public StreakResponse getStreak(Long id, Long userId) {
+        Habit habit = getHabitEntity(id, userId);
         HabitMetrics metrics = calculateMetrics(habit);
         return new StreakResponse(metrics.currentStreak(), metrics.longestStreak(), metrics.todayCompleted());
     }
 
-    public TreeResponse getTree(Long id) {
-        Habit habit = getHabitEntity(id);
+    public TreeResponse getTree(Long id, Long userId) {
+        Habit habit = getHabitEntity(id, userId);
         HabitMetrics metrics = calculateMetrics(habit);
         return new TreeResponse(metrics.treeState(), metrics.treeStage(), metrics.currentStreak(), metrics.longestStreak());
     }
 
-    public AnalyticsResponse getAnalytics(Long id) {
-        Habit habit = getHabitEntity(id);
+    public AnalyticsResponse getAnalytics(Long id, Long userId) {
+        Habit habit = getHabitEntity(id, userId);
         HabitMetrics metrics = calculateMetrics(habit);
         LocalDate today = LocalDate.now();
         LocalDate trackingEnd = getTrackingEndDate(habit, today);
@@ -210,9 +221,13 @@ public class HabitService {
         );
     }
 
-    private Habit getHabitEntity(Long id) {
-        return habitRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Habit not found with id " + id));
+    private Habit getHabitEntity(Long id, Long userId) {
+        Habit habit = habitRepository.findById(id)
+            .orElseThrow(() -> new HabitNotFoundException(id));
+        if (!habit.getUser().getId().equals(userId)) {
+            throw new HabitNotFoundException(id);
+        }
+        return habit;
     }
 
     private HabitResponse toResponse(Habit habit) {
