@@ -4,6 +4,7 @@ import { getHabit, updateHabit } from '../api/habits'
 import type { DayOfWeek, Habit, ScheduleType } from '../types'
 import { DAYS_OF_WEEK } from '../types'
 import './HabitForm.css'
+import './HabitDetail.css'
 
 const CATEGORIES = ['Health', 'Fitness', 'Learning', 'Mindfulness', 'Productivity', 'Social', 'Other']
 
@@ -62,7 +63,13 @@ export default function EditHabit() {
     }
   }
 
-  if (loading) return <p className="state-msg">Loading…</p>
+  if (loading) return (
+    <div className="habit-form-page">
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "32px 20px" }}>
+        {[1,2,3].map(i => <div key={i} className="skeleton skeleton--title" style={{ height: 48, width: "100%", borderRadius: 8 }} />)}
+      </div>
+    </div>
+  )
   if (error && !habit) return <p className="state-msg state-msg--error">{error}</p>
 
   return (

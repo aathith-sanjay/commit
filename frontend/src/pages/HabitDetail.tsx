@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getHabit, getHistory, getAnalytics, completeHabit, undoCompletion, archiveHabit } from '../api/habits'
 import ContributionCalendar from '../components/ContributionCalendar'
+import SkeletonCard from '../components/SkeletonCard'
 import type { AnalyticsResponse, Habit, HabitCompletion } from '../types'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import './HabitDetail.css'
@@ -12,6 +13,21 @@ const TREE_EMOJI: Record<string, string> = {
   YOUNG_TREE: '🌲', TREE: '🌳', FLOWERING_TREE: '🌸', FRUIT_TREE: '🍎', MATURE_TREE: '🏔️',
 }
 const TREE_STATE_LABEL: Record<string, string> = { ALIVE: 'Alive', DEAD: 'Dead' }
+
+function DetailSkeleton() {
+  return (
+    <div className="detail-page">
+      <div className="skeleton-row"><div className="skeleton skeleton--sm" /></div>
+      <div className="detail-hero">
+        <div className="skeleton skeleton--circle" />
+        <div style={{ flex: 1 }}><div className="skeleton skeleton--title" /><div className="skeleton skeleton--text" style={{ marginTop: 8 }} /></div>
+      </div>
+      <div className="stats-grid">
+        {[1,2,3,4].map(i => <SkeletonCard key={i} />)}
+      </div>
+    </div>
+  )
+}
 
 export default function HabitDetail() {
   const { id } = useParams<{ id: string }>()
@@ -28,6 +44,7 @@ export default function HabitDetail() {
   const today = new Date().toISOString().split('T')[0]
 
   async function load() {
+    setError(null)
     try {
       const [h, hist, an] = await Promise.all([
         getHabit(habitId),
@@ -76,8 +93,19 @@ export default function HabitDetail() {
     navigate('/')
   }
 
-  if (loading) return <p className="state-msg">Loading…</p>
-  if (!habit) return <p className="state-msg state-msg--error">{error ?? 'Habit not found.'}</p>
+  if (loading) return <DetailSkeleton />
+
+  if (error && !habit) return (
+    <div className="detail-page">
+      <Link to="/" className="back-link">← Back</Link>
+      <div className="error-state">
+        <p>{error}</p>
+        <button className="btn btn--primary" onClick={load}>Retry</button>
+      </div>
+    </div>
+  )
+
+  if (!habit) return <p className="state-msg">Habit not found.</p>
 
   const completionRate = analytics ? Math.round(analytics.completionRate * 100) : null
   const nextMilestone = MILESTONES.find((m) => m > habit.currentStreak)
@@ -106,7 +134,6 @@ export default function HabitDetail() {
         </div>
       </div>
 
-      {/* Completion action */}
       <div className="detail-action">
         {habit.todayCompleted ? (
           <div className="detail-action__done">
@@ -120,7 +147,6 @@ export default function HabitDetail() {
         )}
       </div>
 
-      {/* Stats grid */}
       <div className="stats-grid">
         <div className="stat-card">
           <span className="stat-value">🔥 {habit.currentStreak}</span>
@@ -144,7 +170,6 @@ export default function HabitDetail() {
         )}
       </div>
 
-      {/* Next milestone */}
       {nextMilestone && (
         <div className="milestone-bar">
           <span>🎯 {nextMilestone - habit.currentStreak} days to {nextMilestone}-day badge</span>
@@ -154,7 +179,6 @@ export default function HabitDetail() {
         </div>
       )}
 
-      {/* Milestone badges */}
       <div className="milestone-badges">
         {MILESTONES.map((m) => (
           <div key={m} className={`milestone-badge ${habit.longestStreak >= m ? 'milestone-badge--earned' : ''}`} title={`${m}-day streak`}>
@@ -163,13 +187,11 @@ export default function HabitDetail() {
         ))}
       </div>
 
-      {/* Contribution calendar */}
       <section className="detail-section">
         <h3 className="detail-section__title">Contribution history</h3>
         <ContributionCalendar completions={history} />
       </section>
 
-      {/* Weekly chart */}
       {analytics && analytics.weeklyStats && analytics.weeklyStats.length > 0 && (
         <section className="detail-section">
           <h3 className="detail-section__title">Weekly completions</h3>

@@ -90,3 +90,11 @@
 @media (max-width: 480px) {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+.skeleton-row { margin-bottom: 12px; }
+.skeleton--circle { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; }
+.skeleton--title { height: 22px; width: 50%; border-radius: 6px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; }
+.skeleton--text { height: 14px; width: 70%; border-radius: 6px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; }
+.skeleton--sm { height: 14px; width: 80px; border-radius: 6px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; }
+@keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+.error-state { text-align: center; padding: 32px 0; display: flex; flex-direction: column; align-items: center; gap: 12px; color: #dc2626; }
