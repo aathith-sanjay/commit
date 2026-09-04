@@ -22,7 +22,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class V2HabitServiceTest {
+class HabitSchedulingServiceTest {
 
     @Autowired
     private HabitService habitService;
