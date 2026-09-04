@@ -14,7 +14,7 @@
     <artifactId>commit-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>commit-backend</name>
-    <description>Backend API for commit. V2</description>
+    <description>Backend API for commit.</description>
 
     <properties>
         <java.version>17</java.version>
